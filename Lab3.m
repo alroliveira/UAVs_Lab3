@@ -344,6 +344,69 @@ plotPath(traj2,'b');  % Goal1 → Goal2
 title('Trajetória completa: Start → Goal1 → Goal2')
 
 
+
+
+
+%%
+
+
+trajTotal = [traj1; traj2]';
+NSim2 = size(trajTotal, 2);
+trajTotal = [trajTotal;zeros(3,NSim2)];
+
+t_end2 = 50;
+
+dt2 = t_end2 / NSim2;
+t2 = 1:dt2:t_end2;
+
+% Linear simulation
+x = zeros(nx,NSim2);
+x(:,1) = trajTotal(:,1);
+u = zeros(3,NSim);
+
+
+for k = 1:NSim2-1
+    % prepare variables:
+    ua = -K*(x(:,k)-trajTotal(:,k));
+    
+    
+    % compute state derivative:
+    dpdt = x(4:6,k);
+    dvdt = ua - Cd * x(4:6,k);
+
+    dxdt = [dpdt; dvdt];
+    
+    % integrate state
+    x(:,k+1) = x(:,k) + dt2 * dxdt;
+end
+x(:,end) = trajTotal(:,end);
+
+% plot
+figure
+view(3);
+hold on
+plot3(trajTotal(1,:), trajTotal(2,:), trajTotal(3,:), 'LineWidth', 2);  % Start → Goal1 → Goal2
+plot3(x(1,:), x(2,:), x(3,:), 'k', 'LineWidth', 2);
+
+
+% Plot dos obstaculos
+plot3(PStart(1), PStart(2), PStart(3), 'go', 'MarkerSize', 8, 'MarkerFaceColor', 'g')
+plot3(PGoal1(1), PGoal1(2), PGoal1(3), 'mo', 'MarkerSize', 8, 'MarkerFaceColor', 'm')
+plot3(PGoal2(1), PGoal2(2), PGoal2(3), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r')
+
+axis([PFly(1,:) PFly(2,:) PFly(3,:)])
+
+patch(obsgen(PNoFly1))
+patch(obsgen(PNoFly2))
+  
+
+legend('Planeamento de Trajetória RRT*', 'Controlador desenvolvido');
+title('Algoritmo de planeamento com controlador desenvolvido')
+
+
+
+%% function
+
 function plotPath(path, color)
     for i = 1:size(path,1)-1
         line([path(i,1), path(i+1,1)], ...
